@@ -1,16 +1,15 @@
-import { gameSettings } from "./global.js";
-import { Player } from "./player.js";
-import { Barrier } from "./barrier.js";
-import { Coin } from "./coin.js";
-import { EntityRegistry } from "./entities.js";
-import { CollisionSystem } from "./collisions.js";
-import { Inputs } from "./inputs.js";
+import { gameSettings, inputBindings } from "../data/settings.js";
+import { Player } from "../entities/player.js";
+import { Barrier } from "../entities/barrier.js";
+import { Coin } from "../entities/coin.js";
+import { EntityRegistry } from "../systems/registry.js";
+import { CollisionSystem } from "../systems/collisions.js";
+import { Inputs } from "../systems/inputs.js";
 import { level1 } from "./levels.js";
-import { EventBus } from "./events.js";
-import { AudioSystem } from "./audio.js";
-import { UILayer, Label } from "./ui.js";
-import { Hazard } from "./hazard.js";
-import { Sprite } from "./animation.js";
+import { EventBus } from "../systems/events.js";
+import { AudioSystem } from "../systems/audio.js";
+import { UILayer, Label } from "../ui/ui.js";
+import { Hazard } from "../entities/hazard.js";
 
 class Game {
   constructor(canvas) {
@@ -20,7 +19,7 @@ class Game {
     this.collisions = new CollisionSystem();
     this.entities = new EntityRegistry();
     this.audio = new AudioSystem();
-    this.input = new Inputs(gameSettings.keys);
+    this.input = new Inputs(inputBindings);
     this.events = new EventBus();
     this.ui = new UILayer();
     this.lastTime = null;
@@ -193,13 +192,17 @@ class Game {
   }
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    // Background
     this.ctx.fillStyle = gameSettings.bgColor;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    // Entities
     this.entities.draw(this.ctx);
+    // UI
     this.ui.draw(this.ctx);
     // this.debugGrid();
   }
   update(dt) {
+    // Entities
     this.entities.update(dt);
   }
   gameLoop() {

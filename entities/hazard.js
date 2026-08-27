@@ -1,4 +1,4 @@
-import { Rect } from "./rect.js";
+import { Rect } from "../core/rect.js";
 
 class Hazard extends Rect {
   constructor(

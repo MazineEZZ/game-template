@@ -1,5 +1,5 @@
-import { Game } from "./game.js";
-import { render } from "./render.js";
+import { Game } from "./core/game.js";
+import { render } from "./dom/render.js";
 
 render();
 const canvas = document.getElementById("main-canvas");

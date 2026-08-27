@@ -1,4 +1,4 @@
-import { gameSettings } from "./global.js";
+import { gameSettings } from "../data/settings.js";
 
 class UIElement {
   constructor(x, y, zIndex) {

@@ -1,4 +1,4 @@
-import { gameSettings } from "./global.js";
+import { gameSettings } from "../data/settings.js";
 
 class Sprite {
   constructor(src, x, y, width, height, spriteWidth, spriteHeight) {
@@ -71,6 +71,8 @@ class AnimatedSprite extends Sprite {
     this.drawY = -this.position.y - this.height;
   }
   draw(ctx, hitboxWidth, hitboxHeight) {
+    if (this.animations.length === 0) throw new Error("Add an animation!");
+
     this.anchorToHitbox(hitboxWidth, hitboxHeight);
 
     ctx.save();

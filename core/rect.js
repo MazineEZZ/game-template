@@ -1,4 +1,4 @@
-import { Vector2 } from "./vector.js";
+import { Vector2 } from "../core/vector.js";
 
 class Rect {
   constructor(x, y, width, height, zIndex, color = "white") {

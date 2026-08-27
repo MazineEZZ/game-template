@@ -15,8 +15,8 @@ const inputBindings = Object.freeze({
   pause_game: "p",
 });
 
-const physicsSettings = Object.freeze({
+const playerSettings = Object.freeze({
   speed: 400,
 });
 
-export { gameSettings, inputBindings, physicsSettings };
+export { gameSettings, inputBindings, playerSettings };

@@ -5,7 +5,7 @@ import { Coin } from "../entities/coin.js";
 import { EntityRegistry } from "../systems/registry.js";
 import { CollisionSystem } from "../systems/collisions.js";
 import { Inputs } from "../systems/inputs.js";
-import { level1 } from "./levels.js";
+import { level1 } from "../data/levels.js";
 import { EventBus } from "../systems/events.js";
 import { AudioSystem } from "../systems/audio.js";
 import { UILayer, Label } from "../ui/ui.js";
@@ -162,10 +162,10 @@ class Game {
     // Events
     this.events.on("coinCollected", (coin) => {
       this.score++;
-      this.audio.playCollect();
+      // this.audio.playCollect();
       this.scoreLabel.setText(`Score: ${this.score}`);
 
-      if (this.score >= 2) this.events.emit("levelComplete", {});
+      if (this.score >= 1) this.events.emit("levelComplete", {});
     });
     this.events.on("levelComplete", () => {
       this.messageLabel.setText("You won!");

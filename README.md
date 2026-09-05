@@ -19,7 +19,7 @@ PS: One thing worth mentioning, `spawn()` should be refactored since currently i
 - **Animation System**: an animation system that uses sprite sheets. It supports adding/removing animations, flipping, and animation frames.
 - **Audio System**: A simple audio system which utilizes JS's built-in Audio() class.
 - **Event Pub/Sub System**: A signal-like system to decouple game components.
-- **UI System**: A UI Layer System that keeps track of UI elements.
+- **UI System**: A UI Layer System that keeps track of UI elements. Current UIElements: Panel, Label, and a Button.
 - **Input System**: A simple Input System that takes bindings and checks whether they have been pressed or not.
 - **Memory System**: A memory manager that saves and loads primitive values.
 

@@ -12,9 +12,8 @@ class DebugOverlay {
       align: "right",
       color: "green",
     });
-    this.timer = 0;
-    this.frames = 0;
-    this.ctr = 0;
+    this.frames = [];
+    this.fps = 0;
   }
   set setState(isOn) {
     this.isOn = isOn;
@@ -30,16 +29,15 @@ class DebugOverlay {
     }
     if (!this.isOn) return;
 
-    this.timer += dt;
-    this.ctr += 1;
-
-    if (this.timer >= 1) {
-      this.frames = roundTo(1 / (this.timer / this.ctr), 2);
-      this.ctr = 0;
-      this.timer -= this.timer;
+    if (this.frames.length >= 30) {
+      this.frames.shift();
     }
+    this.frames.push(dt);
 
-    this.fpsLabel.setText(`fps: ${this.frames}`);
+    this.fps =
+      this.frames.reduce((acc, curr) => acc + curr, 0) / this.frames.length;
+    this.fps = roundTo(1 / this.fps, 2);
+    this.fpsLabel.setText(`fps: ${this.fps}`);
   }
 }
 

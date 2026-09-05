@@ -1,5 +1,5 @@
 import { separate } from "../systems/collisions.js";
-import { gameSettings, playerSettings } from "../data/settings.js";
+import { gameSettings } from "../data/settings.js";
 import { Rect } from "../core/rect.js";
 import { Vector2 } from "../core/vector.js";
 
@@ -17,7 +17,7 @@ class Player extends Rect {
     color = "red",
   ) {
     super(x, y, hitboxWidth, hitboxHeight, zIndex, color);
-    this.speed = playerSettings.speed;
+    this.speed = 300;
     this.collision = collision;
     this.input = input;
   }

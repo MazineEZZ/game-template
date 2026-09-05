@@ -1,15 +1,23 @@
 class AudioSystem {
   constructor() {
-    this.song = [];
+    this.sounds = [];
 
-    // this.song.push(this.collect);
+    this.adjustVolume();
   }
-  adjustVolume(volume = 0.4) {
-    this.song.forEach((song) => (song.volume = volume));
+  add(src) {
+    const soundDir = "assets/sounds/";
+    const audio = new Audio(soundDir + src);
+
+    this.sounds.push(audio);
+
+    return audio;
   }
-  // playCollect() {
-  //   this.collect.play();
-  // }
+  adjustVolume(volume = 0.5) {
+    this.sounds.forEach((sounds) => (sounds.volume = volume));
+  }
+  pauseSounds() {
+    this.sounds.forEach((sound) => sound.pause());
+  }
 }
 
 export { AudioSystem };

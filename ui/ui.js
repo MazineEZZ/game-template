@@ -44,7 +44,7 @@ class Label extends UIElement {
 
 class UILayer {
   constructor() {
-    this.elements = [];
+    super();
   }
   add(element) {
     this.elements.push(element);

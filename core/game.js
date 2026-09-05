@@ -2,10 +2,9 @@ import { gameSettings, inputBindings } from "../data/settings.js";
 import { Player } from "../entities/player.js";
 import { Barrier } from "../entities/barrier.js";
 import { Coin } from "../entities/coin.js";
-import { EntityRegistry } from "../systems/registry.js";
+import { EntityRegistry } from "../systems/entities.js";
 import { CollisionSystem } from "../systems/collisions.js";
 import { Inputs } from "../systems/inputs.js";
-import { level1 } from "../data/levels.js";
 import { EventBus } from "../systems/events.js";
 import { AudioSystem } from "../systems/audio.js";
 import { UILayer, Label } from "../ui/ui.js";
@@ -88,77 +87,7 @@ class Game {
       this.ctx.stroke();
     }
   }
-  spawn(entityData) {
-    const { type, x, y, width, height, hitboxWidth, hitboxHeight, zIndex } =
-      entityData;
-    let entity;
-    switch (type) {
-      case "player":
-        entity = new Player(
-          x,
-          y,
-          width,
-          height,
-          hitboxWidth,
-          hitboxHeight,
-          zIndex,
-          this.collisions,
-          this.input,
-          "red",
-        );
-        this.collisions.register(entity);
-        break;
-      case "barrier":
-        entity = new Barrier(x, y, width, height);
-        this.collisions.register(entity);
-        break;
-      case "hazard":
-        entity = new Hazard(
-          x,
-          y,
-          width,
-          height,
-          zIndex,
-          this.collisions,
-          this.events,
-        );
-        break;
-      case "coin":
-        entity = new Coin(
-          x,
-          y,
-          width,
-          height,
-          zIndex,
-          this.collisions,
-          this.entities,
-          this.events,
-        );
-        break;
-    }
-    this.entities.register(entity);
-    return entity;
-  }
   init() {
-    this.scoreLabel = new Label(20, 40, { text: "Score: 0" });
-    this.messageLabel = new Label(
-      gameSettings.width / 2,
-      gameSettings.height / 2,
-      {
-        font: "40px sans-serif",
-        color: "green",
-        align: "center",
-        baseline: "middle",
-      },
-    );
-    this.ui.add(this.scoreLabel);
-
-    for (const entityData of level1) {
-      this.spawn(entityData);
-    }
-
-    this.entities.sortByLayers();
-
     // Events
     this.events.on("coinCollected", (coin) => {
       this.score++;

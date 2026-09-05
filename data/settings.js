@@ -8,6 +8,11 @@ const gameSettings = Object.freeze({
 });
 
 const inputBindings = Object.freeze({
+  move_up: "z",
+  move_down: "s",
+  move_right: "d",
+  move_left: "q",
+  debug_game: "o",
   pause_game: "p",
 });
 

@@ -1,7 +1,5 @@
 import { gameSettings, inputBindings } from "../data/settings.js";
 import { Player } from "../entities/player.js";
-import { Barrier } from "../entities/barrier.js";
-import { Coin } from "../entities/coin.js";
 import { EntityRegistry } from "../systems/entities.js";
 import { CollisionSystem } from "../systems/collisions.js";
 import { Inputs } from "../systems/inputs.js";
@@ -9,6 +7,7 @@ import { EventBus } from "../systems/events.js";
 import { AudioSystem } from "../systems/audio.js";
 import { UILayer, Label } from "../ui/ui.js";
 import { Hazard } from "../entities/hazard.js";
+import { DebugOverlay } from "../systems/debug.js";
 
 class Game {
   constructor(canvas) {
@@ -18,9 +17,10 @@ class Game {
     this.collisions = new CollisionSystem();
     this.entities = new EntityRegistry();
     this.audio = new AudioSystem();
-    this.input = new Inputs(inputBindings);
+    this.inputs = new Inputs(inputBindings);
     this.events = new EventBus();
     this.ui = new UILayer();
+    this.debugOverlay = new DebugOverlay(this.ui, this.inputs);
     this.lastTime = null;
     this.animationFrameId = null;
     this.score = 0;
@@ -31,14 +31,14 @@ class Game {
     this.canvas.height = gameSettings.height;
 
     this.audio.adjustVolume();
-    this.input.setUpInputs();
+    this.inputs.setUpInputs();
     this.resizeCanvas();
 
     this.setUpEventListeners();
   }
   setUpEventListeners() {
     window.addEventListener("keydown", (e) => {
-      if (!this.input.isDown("pause_game")) return;
+      if (!this.inputs.isDown("pause_game")) return;
       if (!this.isPaused) {
         this.events.emit("gamePaused");
       } else {
@@ -87,7 +87,24 @@ class Game {
       this.ctx.stroke();
     }
   }
+  spawn() {
+    const player = new Player(
+      20,
+      20,
+      40,
+      100,
+      40,
+      100,
+      4,
+      300,
+      this.collisions,
+      this.inputs,
+    );
+    this.entities.register(player);
+  }
   init() {
+    this.spawn();
+
     // Events
     this.events.on("coinCollected", (coin) => {
       this.score++;
@@ -133,6 +150,7 @@ class Game {
   update(dt) {
     // Entities
     this.entities.update(dt);
+    this.debugOverlay.update(dt);
   }
   gameLoop() {
     const loop = (timestamp) => {

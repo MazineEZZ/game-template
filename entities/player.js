@@ -12,12 +12,13 @@ class Player extends Rect {
     hitboxWidth,
     hitboxHeight,
     zIndex,
+    speed,
     collision,
     input,
     color = "red",
   ) {
     super(x, y, hitboxWidth, hitboxHeight, zIndex, color);
-    this.speed = 300;
+    this.speed = speed;
     this.collision = collision;
     this.input = input;
   }

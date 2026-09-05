@@ -21,6 +21,7 @@ PS: One thing worth mentioning, `spawn()` should be refactored since currently i
 - **Event Pub/Sub System**: A signal-like system to decouple game components.
 - **UI System**: A UI Layer System that keeps track of UI elements.
 - **Input System**: A simple Input System that takes bindings and checks whether they have been pressed or not.
+- **Memory System**: A memory manager that saves and loads primitive values.
 
 ### Data
 

@@ -5,7 +5,7 @@ import { CollisionSystem } from "../systems/collisions.js";
 import { Inputs } from "../systems/inputs.js";
 import { EventBus } from "../systems/events.js";
 import { AudioSystem } from "../systems/audio.js";
-import { UILayer, Label, ResourceBar, Checkbox } from "../ui/ui.js";
+import { UILayer, Label, ResourceBar, Checkbox, Slider } from "../ui/ui.js";
 import { Hazard } from "../entities/hazard.js";
 import { DebugOverlay } from "../systems/debug.js";
 import { Barrier } from "../entities/barrier.js";
@@ -55,6 +55,10 @@ class Game {
   setUpEventListeners() {
     this.canvas.addEventListener("mousedown", (e) => {
       this.clientMouse.lastClickPos = this.getScaledMousePos(e);
+      this.clientMouse.isDown = true;
+    });
+    this.canvas.addEventListener("mouseup", (e) => {
+      this.clientMouse.isDown = false;
     });
     this.canvas.addEventListener("mousemove", (e) => {
       this.clientMouse.position = this.getScaledMousePos(e);
@@ -143,7 +147,10 @@ class Game {
 
     const checkbox = new Checkbox(500, 200, 50, 50, 4);
 
+    const slider = new Slider(500, 300, 200, 30, 4);
+
     this.ui.register(checkbox);
+    this.ui.register(slider);
     this.ui.register(playerHealthBar);
 
     this.events.on("playerHealthChanged", ({ current, max }) =>

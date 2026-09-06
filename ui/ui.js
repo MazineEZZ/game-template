@@ -1,10 +1,12 @@
 import { gameSettings } from "../data/settings.js";
 import { RegistrySystem } from "../systems/registry.js";
-import { clamp, colorToRGB } from "../utilities/utils.js";
+import { calcDistance2Points, clamp, colorToRGB } from "../utilities/utils.js";
 
 class UIElement {
-  constructor(x, y, zIndex) {
+  constructor(x, y, width, height, zIndex) {
     this.position = { x, y };
+    this.width = width;
+    this.height = height;
     this.zIndex = zIndex;
     this.visible = true;
   }
@@ -13,9 +15,7 @@ class UIElement {
 
 class Panel extends UIElement {
   constructor(x, y, zIndex, width, height, color) {
-    super(x, y, zIndex);
-    this.width = width;
-    this.height = height;
+    super(x, y, width, height, zIndex);
     this.color = color;
   }
   draw(ctx) {
@@ -41,7 +41,7 @@ class Label extends UIElement {
       fontSrc = "",
     } = {},
   ) {
-    super(x, y, zIndex);
+    super(x, y, 0, 0, zIndex);
     this.text = text;
     this.color = color;
     this.borderColor = borderColor;
@@ -91,9 +91,7 @@ class Label extends UIElement {
 
 class ImageUI extends UIElement {
   constructor(src, x, y, width, height, zIndex) {
-    super(x, y, zIndex);
-    this.width = width;
-    this.height = height;
+    super(x, y, width, height, zIndex);
     this.image = new Image();
     this.image.src = src;
   }
@@ -132,9 +130,7 @@ class Button extends UIElement {
     color = "black",
     hoverClr = "gray",
   ) {
-    super(x, y, zIndex);
-    this.width = width;
-    this.height = height;
+    super(x, y, width, height, zIndex);
     this.color = color;
     this.event = event;
     this.events = events;
@@ -193,9 +189,7 @@ class Checkbox extends UIElement {
     color = "black",
     checkedColor = "rgb(8, 62, 198)",
   ) {
-    super(x, y, zIndex);
-    this.width = width;
-    this.height = height;
+    super(x, y, width, height, zIndex);
     this.color = color;
     this.checkedColor = checkedColor;
     this.inCheck = false;
@@ -239,9 +233,7 @@ class ResourceBar extends UIElement {
     midColor = "rgb(255, 255, 0)",
     minColor = "rgb(255, 0, 0)",
   ) {
-    super(x, y, zIndex);
-    this.width = width;
-    this.height = height;
+    super(x, y, width, height, zIndex);
     this.progress = 1;
     this.maxColor = colorToRGB(maxColor);
     this.midColor = colorToRGB(midColor);
@@ -296,6 +288,77 @@ class ResourceBar extends UIElement {
   }
 }
 
+class Slider extends UIElement {
+  constructor(
+    x,
+    y,
+    width,
+    height,
+    zIndex,
+    color = "white",
+    knobColor = "rgb(27, 67, 179)",
+  ) {
+    super(x, y, width, height, zIndex);
+    this.color = color;
+    this.maxVal = 1;
+    this.minVal = 0;
+    this.progress = 1;
+    this.knob = {
+      color: knobColor,
+      radius: this.height / 2,
+      position: {
+        x: this.position.x + this.height / 2,
+        y: this.position.y + this.height / 2,
+      },
+    };
+  }
+  update(dt, mouse) {
+    if (mouse.isDown && this.isKnobClicked) {
+      this.knob.position.x = mouse.position.x + this.diff;
+    } else {
+      this.isKnobClicked = false;
+    }
+    if (isMouseOverlapping(this.knob, mouse.lastClickPos, true)) {
+      this.diff = this.knob.position.x - mouse.lastClickPos.x;
+      this.isKnobClicked = true;
+    }
+
+    this.knob.position.x = this.keepInBounds(
+      this.position.x,
+      this.width,
+      this.knob.position.x,
+      this.knob.radius,
+    );
+  }
+  keepInBounds(sliderX, sliderWidth, knobX, knobRadius) {
+    if (knobX + knobRadius >= sliderX + sliderWidth) {
+      return sliderX + sliderWidth - knobRadius;
+    } else if (knobX <= sliderX + knobRadius) {
+      return sliderX + knobRadius;
+    }
+    return knobX;
+  }
+  draw(ctx) {
+    ctx.save();
+    // Back
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
+    // The Knob
+    ctx.fillStyle = this.knob.color;
+    ctx.beginPath();
+    ctx.arc(
+      this.knob.position.x,
+      this.knob.position.y,
+      this.knob.radius,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
 class UILayer extends RegistrySystem {
   constructor() {
     super();
@@ -319,7 +382,11 @@ class UILayer extends RegistrySystem {
 }
 
 // UI Helpful Functions
-function isMouseOverlapping(element, mousepos) {
+function isMouseOverlapping(element, mousepos, isCircle = false) {
+  if (isCircle) {
+    const distance = calcDistance2Points(element.position, mousepos);
+    return distance < element.radius;
+  }
   return (
     element.position.x < mousepos.x &&
     mousepos.x < element.position.x + element.width &&
@@ -356,5 +423,6 @@ export {
   Button,
   ResourceBar,
   Checkbox,
+  Slider,
   isMouseOverlapping,
 };

@@ -1,6 +1,6 @@
 import { gameSettings } from "../data/settings.js";
 import { RegistrySystem } from "../systems/registry.js";
-import { clamp } from "../utilities/utils.js";
+import { clamp, colorToRGB } from "../utilities/utils.js";
 
 class UIElement {
   constructor(x, y, zIndex) {
@@ -184,6 +184,34 @@ class Button extends UIElement {
   }
 }
 
+class Checkbox extends UIElement {
+  constructor(
+    x,
+    y,
+    width,
+    height,
+    zIndex,
+    color = "black",
+    checkedColor = "rgb(8, 62, 198)",
+  ) {
+    super(x, y, zIndex);
+    this.width = width;
+    this.height = height;
+    this.color = color;
+    this.checkedColor = checkedColor;
+    this.inCheck = false;
+  }
+  update(dt) {}
+  draw(ctx) {
+    ctx.save();
+
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = this.color;
+
+    ctx.restore();
+  }
+}
+
 class ResourceBar extends UIElement {
   constructor(
     x,
@@ -192,20 +220,22 @@ class ResourceBar extends UIElement {
     height,
     zIndex,
     maxColor = "rgb(0, 255, 0)",
+    midColor = "rgb(255, 255, 0)",
     minColor = "rgb(255, 0, 0)",
   ) {
     super(x, y, zIndex);
     this.width = width;
     this.height = height;
     this.progress = 1;
-    this.maxColor = maxColor;
-    this.minColor = minColor;
+    this.maxColor = colorToRGB(maxColor);
+    this.midColor = colorToRGB(midColor);
+    this.minColor = colorToRGB(minColor);
+    this.progressColor = this.maxColor;
     this.newVal = 1;
     this.maxVal = 1;
     this.minVal = 0;
   }
   setValue(val, max) {
-    this.maxVal = max / max;
     this.newVal = val / max;
   }
   update(dt) {
@@ -214,6 +244,19 @@ class ResourceBar extends UIElement {
       lerp(this.progress, this.newVal, 5 * dt),
       this.maxVal,
     );
+    if (this.progress > 0.5) {
+      this.progressColor = lerpColor(
+        this.midColor,
+        this.maxColor,
+        (this.progress - 0.5) * 2,
+      );
+    } else {
+      this.progressColor = lerpColor(
+        this.minColor,
+        this.midColor,
+        this.progress * 2,
+      );
+    }
   }
   draw(ctx) {
     ctx.save();
@@ -222,7 +265,7 @@ class ResourceBar extends UIElement {
     ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
     // Bar
     const offset = 3;
-    ctx.fillStyle = "green";
+    ctx.fillStyle = `rgb(${this.progressColor.r}, ${this.progressColor.g}, ${this.progressColor.b})`;
     ctx.fillRect(
       this.position.x + offset,
       this.position.y + offset,
@@ -263,6 +306,14 @@ function isMouseOverlapping(element, mousepos) {
     element.position.y < mousepos.y &&
     mousepos.y < element.position.y + element.height
   );
+}
+
+function lerpColor(color1, color2, percent) {
+  return {
+    r: lerp(color1.r, color2.r, percent),
+    g: lerp(color1.g, color2.g, percent),
+    b: lerp(color1.b, color2.b, percent),
+  };
 }
 
 function lerp(a, b, t) {

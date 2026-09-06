@@ -49,7 +49,7 @@ class Player extends Rect {
     }
     if (this.input.isDownOnce("test2")) {
       this.health =
-        this.health >= this.maxHealth ? this.maxHealth : this.health + 20;
+        this.health >= this.maxHealth ? this.maxHealth : this.health + 100;
       this.events.emit("playerHealthChanged", {
         current: this.health,
         max: this.maxHealth,

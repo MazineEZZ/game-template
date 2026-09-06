@@ -33,4 +33,4 @@ function colorToRGB(color) {
   return { r, g, b };
 }
 
-export { roundTo, clamp };
+export { roundTo, clamp, colorToRGB };

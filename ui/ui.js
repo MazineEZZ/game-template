@@ -1,6 +1,6 @@
 import { gameSettings } from "../data/settings.js";
-import { isColliding } from "../systems/collisions.js";
 import { RegistrySystem } from "../systems/registry.js";
+import { clamp } from "../utilities/utils.js";
 
 class UIElement {
   constructor(x, y, zIndex) {
@@ -184,13 +184,53 @@ class Button extends UIElement {
   }
 }
 
-function isMouseOverlapping(element, mousepos) {
-  return (
-    element.position.x < mousepos.x &&
-    mousepos.x < element.position.x + element.width &&
-    element.position.y < mousepos.y &&
-    mousepos.y < element.position.y + element.height
-  );
+class ResourceBar extends UIElement {
+  constructor(
+    x,
+    y,
+    width,
+    height,
+    zIndex,
+    maxColor = "rgb(0, 255, 0)",
+    minColor = "rgb(255, 0, 0)",
+  ) {
+    super(x, y, zIndex);
+    this.width = width;
+    this.height = height;
+    this.progress = 1;
+    this.maxColor = maxColor;
+    this.minColor = minColor;
+    this.newVal = 1;
+    this.maxVal = 1;
+    this.minVal = 0;
+  }
+  setValue(val, max) {
+    this.maxVal = max / max;
+    this.newVal = val / max;
+  }
+  update(dt) {
+    this.progress = clamp(
+      this.minVal,
+      lerp(this.progress, this.newVal, 5 * dt),
+      this.maxVal,
+    );
+  }
+  draw(ctx) {
+    ctx.save();
+    // Back
+    ctx.fillStyle = "black";
+    ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
+    // Bar
+    const offset = 3;
+    ctx.fillStyle = "green";
+    ctx.fillRect(
+      this.position.x + offset,
+      this.position.y + offset,
+      (this.width - offset * 2) * this.progress,
+      this.height - offset * 2,
+    );
+    ctx.restore();
+  }
 }
 
 class UILayer extends RegistrySystem {
@@ -215,4 +255,29 @@ class UILayer extends RegistrySystem {
   }
 }
 
-export { UILayer, Label, Panel, ImageUI, Button };
+// UI Helpful Functions
+function isMouseOverlapping(element, mousepos) {
+  return (
+    element.position.x < mousepos.x &&
+    mousepos.x < element.position.x + element.width &&
+    element.position.y < mousepos.y &&
+    mousepos.y < element.position.y + element.height
+  );
+}
+
+function lerp(a, b, t) {
+  // a: the value of the object
+  // b: the value to follow
+  // t: the time between the change
+  return a + t * (b - a);
+}
+
+export {
+  UILayer,
+  Label,
+  Panel,
+  ImageUI,
+  Button,
+  ResourceBar,
+  isMouseOverlapping,
+};

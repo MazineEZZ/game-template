@@ -14,6 +14,8 @@ const inputBindings = Object.freeze({
   move_left: "q",
   debug_game: "o",
   pause_game: "p",
+  test: "l",
+  test2: "m",
 });
 
 export { gameSettings, inputBindings };

@@ -5,9 +5,10 @@ import { CollisionSystem } from "../systems/collisions.js";
 import { Inputs } from "../systems/inputs.js";
 import { EventBus } from "../systems/events.js";
 import { AudioSystem } from "../systems/audio.js";
-import { UILayer, Label } from "../ui/ui.js";
+import { UILayer, Label, ResourceBar } from "../ui/ui.js";
 import { Hazard } from "../entities/hazard.js";
 import { DebugOverlay } from "../systems/debug.js";
+import { Barrier } from "../entities/barrier.js";
 
 class Game {
   constructor(canvas) {
@@ -20,11 +21,20 @@ class Game {
     this.inputs = new Inputs(inputBindings);
     this.events = new EventBus();
     this.ui = new UILayer();
-    this.debugOverlay = new DebugOverlay(this.ui, this.inputs);
+    this.debugOverlay = new DebugOverlay(
+      this.ui,
+      this.entities,
+      this.collisions,
+      this.inputs,
+    );
     this.lastTime = null;
     this.animationFrameId = null;
     this.score = 0;
     this.isPaused = false;
+    this.clientMouse = {
+      position: { x: -10, y: -10 },
+      lastClickPos: { x: -10, y: -10 },
+    };
 
     // Initial Setup
     this.canvas.width = gameSettings.width;
@@ -36,7 +46,19 @@ class Game {
 
     this.setUpEventListeners();
   }
+  getScaledMousePos(e) {
+    return {
+      x: e.offsetX * (this.canvas.width / this.canvas.clientWidth),
+      y: e.offsetY * (this.canvas.height / this.canvas.clientHeight),
+    };
+  }
   setUpEventListeners() {
+    this.canvas.addEventListener("mousedown", (e) => {
+      this.clientMouse.lastClickPos = this.getScaledMousePos(e);
+    });
+    this.canvas.addEventListener("mousemove", (e) => {
+      this.clientMouse.position = this.getScaledMousePos(e);
+    });
     window.addEventListener("keydown", (e) => {
       if (!this.inputs.isDown("pause_game")) return;
       if (!this.isPaused) {
@@ -88,7 +110,8 @@ class Game {
     }
   }
   spawn() {
-    const player = new Player(
+    this.player = new Player(
+      "player",
       20,
       20,
       40,
@@ -99,11 +122,34 @@ class Game {
       300,
       this.collisions,
       this.inputs,
+      this.events,
+      "yellow",
     );
-    this.entities.register(player);
+    this.collisions.register(this.player);
+    this.entities.register(this.player);
+
+    const obstacle = new Barrier("barrier", 200, 100, 50, 50, 3, "brown");
+    this.entities.register(obstacle);
+    this.collisions.register(obstacle);
+  }
+  loadUI() {
+    const playerHealthBar = new ResourceBar(
+      20,
+      gameSettings.height - 30 - 20,
+      200,
+      30,
+      3,
+    );
+    this.ui.register(playerHealthBar);
+
+    this.events.on("playerHealthChanged", ({ current, max }) =>
+      playerHealthBar.setValue(current, max),
+    );
   }
   init() {
     this.spawn();
+
+    this.loadUI();
 
     // Events
     this.events.on("coinCollected", (coin) => {
@@ -143,6 +189,8 @@ class Game {
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     // Entities
     this.entities.draw(this.ctx);
+    // debug
+    this.debugOverlay.draw(this.ctx);
     // UI
     this.ui.draw(this.ctx);
     // this.debugGrid();
@@ -150,7 +198,12 @@ class Game {
   update(dt) {
     // Entities
     this.entities.update(dt);
-    this.debugOverlay.update(dt);
+    // UI
+    this.ui.update(dt);
+    // Debug
+    this.debugOverlay.update(dt, this.clientMouse);
+
+    this.clientMouse.lastClickPos = { x: -10, y: -10 };
   }
   gameLoop() {
     const loop = (timestamp) => {

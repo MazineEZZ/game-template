@@ -5,6 +5,7 @@ import { Vector2 } from "../core/vector.js";
 
 class Player extends Rect {
   constructor(
+    type,
     x,
     y,
     width,
@@ -15,12 +16,16 @@ class Player extends Rect {
     speed,
     collision,
     input,
+    events,
     color = "red",
   ) {
-    super(x, y, hitboxWidth, hitboxHeight, zIndex, color);
+    super(type, x, y, hitboxWidth, hitboxHeight, zIndex, color);
     this.speed = speed;
     this.collision = collision;
+    this.events = events;
     this.input = input;
+    this.maxHealth = 200;
+    this.health = 200;
   }
   update(delta) {
     const dir = new Vector2();
@@ -34,6 +39,21 @@ class Player extends Rect {
     if (this.input.isDown("move_right")) {
       dir.x += 1;
       // this.animation.flipH = false;
+    }
+    if (this.input.isDownOnce("test")) {
+      this.health = this.health <= 0 ? 0 : this.health - 20;
+      this.events.emit("playerHealthChanged", {
+        current: this.health,
+        max: this.maxHealth,
+      });
+    }
+    if (this.input.isDownOnce("test2")) {
+      this.health =
+        this.health >= this.maxHealth ? this.maxHealth : this.health + 20;
+      this.events.emit("playerHealthChanged", {
+        current: this.health,
+        max: this.maxHealth,
+      });
     }
 
     // if (dir.x || dir.y) this.animation.select("run");

@@ -5,7 +5,15 @@ import { CollisionSystem } from "../systems/collisions.js";
 import { Inputs } from "../systems/inputs.js";
 import { EventBus } from "../systems/events.js";
 import { AudioSystem } from "../systems/audio.js";
-import { UILayer, Label, ResourceBar, Checkbox, Slider } from "../ui/ui.js";
+import {
+  UILayer,
+  Label,
+  ResourceBar,
+  Checkbox,
+  Slider,
+  TooltipManager,
+  Tooltip,
+} from "../ui/ui.js";
 import { Hazard } from "../entities/hazard.js";
 import { DebugOverlay } from "../systems/debug.js";
 import { Barrier } from "../entities/barrier.js";
@@ -21,6 +29,7 @@ class Game {
     this.inputs = new Inputs(inputBindings);
     this.events = new EventBus();
     this.ui = new UILayer();
+    this.tooltips = new TooltipManager();
     this.debugOverlay = new DebugOverlay(
       this.ui,
       this.entities,
@@ -132,6 +141,8 @@ class Game {
     this.collisions.register(this.player);
     this.entities.register(this.player);
 
+    this.tooltips.register(this.player, "hi, I'm a player");
+
     const obstacle = new Barrier("barrier", 200, 100, 50, 50, 3, "brown");
     this.entities.register(obstacle);
     this.collisions.register(obstacle);
@@ -204,6 +215,8 @@ class Game {
     this.debugOverlay.draw(this.ctx);
     // UI
     this.ui.draw(this.ctx);
+    // Tooltip
+    this.tooltips.draw(this.ctx);
     // this.debugGrid();
   }
   update(dt) {
@@ -211,6 +224,8 @@ class Game {
     this.entities.update(dt);
     // UI
     this.ui.update(dt, this.clientMouse);
+    // Tooltip
+    this.tooltips.update(dt, this.clientMouse);
     // Debug
     this.debugOverlay.update(dt, this.clientMouse);
 

@@ -1,6 +1,11 @@
 import { gameSettings } from "../data/settings.js";
 import { RegistrySystem } from "../systems/registry.js";
-import { calcDistance2Points, clamp, colorToRGB } from "../utilities/utils.js";
+import {
+  calcDistance2Points,
+  indentText,
+  clamp,
+  colorToRGB,
+} from "../utilities/utils.js";
 
 class UIElement {
   constructor(x, y, width, height, zIndex) {
@@ -14,7 +19,7 @@ class UIElement {
 }
 
 class Panel extends UIElement {
-  constructor(x, y, zIndex, width, height, color) {
+  constructor(x, y, width, height, zIndex, color) {
     super(x, y, width, height, zIndex);
     this.color = color;
   }
@@ -39,6 +44,7 @@ class Label extends UIElement {
       fontSize = "30px",
       fontName = "sans-serif",
       fontSrc = "",
+      newLine = "",
     } = {},
   ) {
     super(x, y, 0, 0, zIndex);
@@ -48,6 +54,10 @@ class Label extends UIElement {
     this.borderSize = borderSize;
     this.align = align;
     this.baseline = baseline;
+
+    if (newLine !== "") {
+      this.text = indentText(this.text, newLine);
+    }
 
     this.fontSize = fontSize;
     this.fontName = fontName;
@@ -329,6 +339,10 @@ class Slider extends UIElement {
       this.knob.position.x,
       this.knob.radius,
     );
+
+    const min = this.position.x + this.knob.radius;
+    const max = this.position.x + this.width - this.knob.radius;
+    this.progress = inverseLerp(min, max, this.knob.position.x);
   }
   keepInBounds(sliderX, sliderWidth, knobX, knobRadius) {
     if (knobX + knobRadius >= sliderX + sliderWidth) {
@@ -359,6 +373,59 @@ class Slider extends UIElement {
   }
 }
 
+class Tooltip extends Panel {
+  constructor(color) {
+    super(0, 0, 100, 50, 1, color);
+    this.padding = 5;
+    this.label = new Label(0, 0, {
+      text: "",
+      color: "white",
+      borderColor: "black",
+      borderSize: 4,
+      align: "left",
+      baseline: "top",
+      fontSize: "20px",
+    });
+  }
+  setText(text) {
+    this.label.position.x = this.position.x + this.padding;
+    this.label.position.y = this.position.y + this.padding;
+    this.label.setText(text);
+  }
+}
+
+class TooltipManager {
+  constructor() {
+    this.tooltip = new Tooltip("black");
+    this.trackedEntities = [];
+  }
+  register(entity, text) {
+    this.trackedEntities.push({ entity, text });
+  }
+  update(dt, mouse) {
+    for (const te of this.trackedEntities) {
+      if (isMouseOverlapping(te.entity, mouse.position)) {
+        const offset = 10;
+        this.tooltip.position.x =
+          te.entity.position.x + te.entity.width + offset;
+        this.tooltip.position.y = te.entity.position.y;
+        this.tooltip.setText(te.text);
+        te.showTooltip = true;
+      } else {
+        te.showTooltip = false;
+      }
+    }
+  }
+  draw(ctx) {
+    for (const te of this.trackedEntities) {
+      if (!te.showTooltip) continue;
+
+      this.tooltip.draw(ctx);
+      this.tooltip.label.draw(ctx);
+    }
+  }
+}
+
 class UILayer extends RegistrySystem {
   constructor() {
     super();
@@ -371,12 +438,6 @@ class UILayer extends RegistrySystem {
       if (typeof el.update === "function") {
         el.update(dt, mouse);
       }
-    }
-  }
-  draw(ctx) {
-    this.sortByLayers();
-    for (const el of [...this.elements]) {
-      el.draw(ctx);
     }
   }
 }
@@ -410,6 +471,10 @@ function lerp(a, b, t) {
   return a + t * (b - a);
 }
 
+function inverseLerp(a, b, val) {
+  return (val - a) / (b - a);
+}
+
 function remap(t, t1, t2, a, b) {
   // I remade this function using slopes for easier time manipulation
   return a + ((b - a) * (t - t1)) / (t2 - t1);
@@ -417,6 +482,7 @@ function remap(t, t1, t2, a, b) {
 
 export {
   UILayer,
+  TooltipManager,
   Label,
   Panel,
   ImageUI,
@@ -424,5 +490,6 @@ export {
   ResourceBar,
   Checkbox,
   Slider,
+  Tooltip,
   isMouseOverlapping,
 };

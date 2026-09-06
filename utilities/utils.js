@@ -15,7 +15,21 @@ function toDegrees(rad) {
 }
 
 function calcDistance2Points(p1, p2) {
-  return Math.sqrt((p1.x - p2.x) ** 2 - (p1.y - p2.y) ** 2);
+  return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
+}
+
+function indentText(text, newLine) {
+  let ctr = 0;
+  let newText = [];
+  for (const letter of text) {
+    if (ctr >= newLine) {
+      newText.push("\n");
+      ctr = 0;
+    }
+    newText.push(letter);
+    ctr++;
+  }
+  return newText.join("");
 }
 
 function colorToRGB(color) {
@@ -37,4 +51,4 @@ function colorToRGB(color) {
   return { r, g, b };
 }
 
-export { roundTo, clamp, colorToRGB, calcDistance2Points };
+export { roundTo, clamp, colorToRGB, indentText, calcDistance2Points };

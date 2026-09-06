@@ -165,7 +165,6 @@ class Button extends UIElement {
     }
     if (isMouseOverlapping(this, mouse.lastClickPos)) {
       this.events.emit(this.event);
-      mouse.lastClickPos = { x: -10, y: -10 };
     }
   }
   draw(ctx) {
@@ -201,12 +200,29 @@ class Checkbox extends UIElement {
     this.checkedColor = checkedColor;
     this.inCheck = false;
   }
-  update(dt) {}
+  update(dt, mouse) {
+    if (isMouseOverlapping(this, mouse.lastClickPos)) {
+      this.inCheck = !this.inCheck;
+    }
+  }
   draw(ctx) {
     ctx.save();
 
-    ctx.lineWidth = 4;
+    const offset = 4;
+
+    ctx.lineWidth = offset;
     ctx.strokeStyle = this.color;
+    ctx.strokeRect(this.position.x, this.position.y, this.width, this.height);
+
+    if (this.inCheck) {
+      ctx.fillStyle = this.checkedColor;
+      ctx.fillRect(
+        this.position.x + offset,
+        this.position.y + offset,
+        this.width - offset * 2,
+        this.height - offset * 2,
+      );
+    }
 
     ctx.restore();
   }
@@ -248,13 +264,17 @@ class ResourceBar extends UIElement {
       this.progressColor = lerpColor(
         this.midColor,
         this.maxColor,
-        (this.progress - 0.5) * 2,
+        this.progress,
+        0.5,
+        1,
       );
     } else {
       this.progressColor = lerpColor(
         this.minColor,
         this.midColor,
-        this.progress * 2,
+        this.progress,
+        0,
+        0.5,
       );
     }
   }
@@ -283,10 +303,10 @@ class UILayer extends RegistrySystem {
   sortByLayers() {
     this.elements.sort((a, b) => a.zIndex - b.zIndex);
   }
-  update(mouse) {
+  update(dt, mouse) {
     for (const el of [...this.elements]) {
       if (typeof el.update === "function") {
-        el.update(mouse);
+        el.update(dt, mouse);
       }
     }
   }
@@ -308,19 +328,24 @@ function isMouseOverlapping(element, mousepos) {
   );
 }
 
-function lerpColor(color1, color2, percent) {
+function lerpColor(color1, color2, progress, t1, t2) {
   return {
-    r: lerp(color1.r, color2.r, percent),
-    g: lerp(color1.g, color2.g, percent),
-    b: lerp(color1.b, color2.b, percent),
+    r: remap(progress, t1, t2, color1.r, color2.r),
+    g: remap(progress, t1, t2, color1.g, color2.g),
+    b: remap(progress, t1, t2, color1.b, color2.b),
   };
 }
 
 function lerp(a, b, t) {
   // a: the value of the object
   // b: the value to follow
-  // t: the time between the change
+  // t: the time it takes to reach b
   return a + t * (b - a);
+}
+
+function remap(t, t1, t2, a, b) {
+  // I remade this function using slopes for easier time manipulation
+  return a + ((b - a) * (t - t1)) / (t2 - t1);
 }
 
 export {
@@ -330,5 +355,6 @@ export {
   ImageUI,
   Button,
   ResourceBar,
+  Checkbox,
   isMouseOverlapping,
 };

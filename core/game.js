@@ -5,7 +5,7 @@ import { CollisionSystem } from "../systems/collisions.js";
 import { Inputs } from "../systems/inputs.js";
 import { EventBus } from "../systems/events.js";
 import { AudioSystem } from "../systems/audio.js";
-import { UILayer, Label, ResourceBar } from "../ui/ui.js";
+import { UILayer, Label, ResourceBar, Checkbox } from "../ui/ui.js";
 import { Hazard } from "../entities/hazard.js";
 import { DebugOverlay } from "../systems/debug.js";
 import { Barrier } from "../entities/barrier.js";
@@ -140,6 +140,10 @@ class Game {
       30,
       3,
     );
+
+    const checkbox = new Checkbox(500, 200, 50, 50, 4);
+
+    this.ui.register(checkbox);
     this.ui.register(playerHealthBar);
 
     this.events.on("playerHealthChanged", ({ current, max }) =>
@@ -199,7 +203,7 @@ class Game {
     // Entities
     this.entities.update(dt);
     // UI
-    this.ui.update(dt);
+    this.ui.update(dt, this.clientMouse);
     // Debug
     this.debugOverlay.update(dt, this.clientMouse);
 

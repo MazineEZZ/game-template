@@ -4,7 +4,7 @@ const gameSettings = Object.freeze({
   ratio: 16 / 9,
   margin: 5,
   grid: 80,
-  bgColor: "blue",
+  bgColor: "rgb(82, 171, 244)",
 });
 
 const inputBindings = Object.freeze({

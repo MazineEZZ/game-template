@@ -141,7 +141,7 @@ class Game {
     this.collisions.register(this.player);
     this.entities.register(this.player);
 
-    this.tooltips.register(this.player, "hi, I'm a player");
+    this.tooltips.register(this.player, "This is a long test text, to see whether the tooltip wraps text or not.");
 
     const obstacle = new Barrier("barrier", 200, 100, 50, 50, 3, "brown");
     this.entities.register(obstacle);
@@ -155,6 +155,8 @@ class Game {
       30,
       3,
     );
+
+    this.tooltips.register(playerHealthBar, "This is a player's healthbar");
 
     const checkbox = new Checkbox(500, 200, 50, 50, 4);
 

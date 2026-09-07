@@ -1,10 +1,10 @@
-import { gameSettings } from "../data/settings.js";
+
 import { RegistrySystem } from "../systems/registry.js";
 import {
   calcDistance2Points,
-  indentText,
   clamp,
   colorToRGB,
+  isLetter,
 } from "../utilities/utils.js";
 
 class UIElement {
@@ -44,7 +44,6 @@ class Label extends UIElement {
       fontSize = "30px",
       fontName = "sans-serif",
       fontSrc = "",
-      newLine = "",
     } = {},
   ) {
     super(x, y, 0, 0, zIndex);
@@ -54,10 +53,6 @@ class Label extends UIElement {
     this.borderSize = borderSize;
     this.align = align;
     this.baseline = baseline;
-
-    if (newLine !== "") {
-      this.text = indentText(this.text, newLine);
-    }
 
     this.fontSize = fontSize;
     this.fontName = fontName;
@@ -373,24 +368,85 @@ class Slider extends UIElement {
   }
 }
 
-class Tooltip extends Panel {
-  constructor(color) {
-    super(0, 0, 100, 50, 1, color);
-    this.padding = 5;
-    this.label = new Label(0, 0, {
-      text: "",
-      color: "white",
-      borderColor: "black",
-      borderSize: 4,
-      align: "left",
-      baseline: "top",
-      fontSize: "20px",
-    });
+class Tooltip extends UIElement {
+  constructor(color, {fontSize = "20px", fontClr = "white", fontBorderClr = "black", fontBorderSize = 4, fontAlign = "left", fontBaseline = "top", } = {}) {
+    super(0, 0, 0, 0, 1);
+    this.color = color;
+    this.padding = 10;
+    this._dirty = false;
+    this.maxWidth = 200;
+    // Font config
+    this.fontSize = fontSize;
+    this.lineHeight = fontSize.split("px")[0] * 1.2;
+    this.fontClr = fontClr;
+    this.fontBorderClr = fontBorderClr;
+    this.fontBorderSize = fontBorderSize;
+    this.font = `${this.fontSize} sans-serif`;
+    this.align = fontAlign;
+    this.baseline = fontBaseline;
   }
   setText(text) {
-    this.label.position.x = this.position.x + this.padding;
-    this.label.position.y = this.position.y + this.padding;
-    this.label.setText(text);
+    if (this.text !== text) {
+      this._dirty = true;
+    }
+    this.text = text;
+  }
+  wrapLines(ctx) {
+    ctx.font = this.font;
+
+    let accWidth = 0;
+    let line = [];
+    let lines = [];
+
+    for (const char of this.text) {
+      accWidth += ctx.measureText(char).width;
+      line.push(char);
+
+      if (accWidth >= this.maxWidth) {
+        if (isLetter(line.at(-1))) {
+          line.push("-");
+        }
+        lines.push(line.join(""));
+        line.length = 0;
+        accWidth = 0;
+      }
+    }
+    lines.push(line.join(""));
+    this.lines = lines;
+
+    this.width = Math.max(...this.lines.map(line => ctx.measureText(line).width)) + this.padding * 2;
+    this.height = this.lineHeight * this.lines.length + this.padding * 2;
+  }
+  draw(ctx) {
+    // Set width and height sizes for tooltip
+    ctx.save();
+
+    if (this._dirty) {
+      this.wrapLines(ctx);
+      this._dirty = false;
+    }
+    // Back
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
+
+    // Label
+    ctx.font = this.font;
+    ctx.textAlign = this.align;
+    ctx.textBaseline = this.baseline;
+    let lineCount = 0;
+    // Border
+    for (const line of this.lines) {
+      ctx.strokeStyle = this.fontBorderClr;
+      ctx.lineWidth = this.fontBorderSize;
+      ctx.lineJoin = "round";
+      ctx.strokeText(line, this.position.x + this.padding, this.position.y + lineCount * this.lineHeight + this.padding);
+      // Font
+      ctx.fillStyle = this.fontClr;
+      ctx.fillText(line, this.position.x + this.padding, this.position.y + lineCount * this.lineHeight + this.padding);
+      lineCount++;
+    }
+
+    ctx.restore();
   }
 }
 
@@ -406,8 +462,7 @@ class TooltipManager {
     for (const te of this.trackedEntities) {
       if (isMouseOverlapping(te.entity, mouse.position)) {
         const offset = 10;
-        this.tooltip.position.x =
-          te.entity.position.x + te.entity.width + offset;
+        this.tooltip.position.x = te.entity.position.x + te.entity.width + offset;
         this.tooltip.position.y = te.entity.position.y;
         this.tooltip.setText(te.text);
         te.showTooltip = true;
@@ -421,7 +476,6 @@ class TooltipManager {
       if (!te.showTooltip) continue;
 
       this.tooltip.draw(ctx);
-      this.tooltip.label.draw(ctx);
     }
   }
 }

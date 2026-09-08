@@ -4,27 +4,32 @@ class State {
 		this.onEnter = onEnter || (() => {});
 		this.onExit = onExit || (() => {});
 	}
-	transition(event) {
-		for (const trans of this.transitions) {
-			if (trans.event === event) {
-				return trans.next;
-			}
-		}
-	}
 }
 
 class StateManager {
 	constructor(states) {
 		this.states = states;
 	}
-	set currentState(state) {
+	setCurrentState(state) {
 		this.currentState = state;
 	}
 	handleEvent(event) {
-		const next = currentState;
+		if (this.currentState === undefined) {
+			throw new Error("currentState must be specified!");
+		}
+		for (const trans of this.currentState.transitions) {
+			if (trans.event === event) {
+				this.currentState.onExit();
+				this.currentState = this.states[trans.state];
+				this.currentState.onEnter();
+				return "Transition Successful";
+			}
+		}
+		console.warn("Not possible");
 	}
 }
 
+// GAME STATE
 const pausedState = new State([
 	{
 		event: "gameUnpaused",
@@ -51,4 +56,9 @@ const playState = new State([
 const gameState = new StateManager({
 	paused: pausedState,
 	menu: menuState,
+	play: playState,
 });
+
+gameState.setCurrentState(gameState.states.menu);
+console.log(gameState.handleEvent("gameStarted"));
+console.log(gameState.handleEvent("gamePaused"));

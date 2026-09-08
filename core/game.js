@@ -11,6 +11,7 @@ import {
   ResourceBar,
   Checkbox,
   Slider,
+  Button,
   TooltipManager,
   Tooltip,
 } from "../ui/ui.js";
@@ -29,10 +30,8 @@ class Game {
     this.audio = new AudioSystem();
     this.inputs = new Inputs(inputBindings);
     this.events = new EventBus();
-    this.ui = new UILayer();
     this.tooltips = new TooltipManager();
     this.debugOverlay = new DebugOverlay(
-      this.ui,
       this.entities,
       this.collisions,
       this.inputs,
@@ -45,7 +44,7 @@ class Game {
     };
 
     // Game State
-    gameState.setCurrentState(gameState.states.play);
+    gameState.setCurrentState(gameState.states.menu);
 
     // Initial Setup
     this.canvas.width = gameSettings.width;
@@ -76,7 +75,7 @@ class Game {
     });
     window.addEventListener("keydown", (e) => {
       if (!this.inputs.isDown("pause_game")) return;
-      gameState.handleEvent("togglePause", this.events);
+      gameState.handleEvent("togglePause", this);
     });
     window.addEventListener("resize", () => {
       this.resizeCanvas();
@@ -120,7 +119,7 @@ class Game {
       this.ctx.stroke();
     }
   }
-  spawn() {
+  loadPlayState() {
     this.player = new Player(
       "player",
       20,
@@ -142,28 +141,54 @@ class Game {
     this.tooltips.register(
       this.player,
       "This is a long test text, to see whether the tooltip wraps text or not.",
+      gameState.states.play,
     );
 
     const obstacle = new Barrier("barrier", 200, 100, 50, 50, 3, "brown");
     this.entities.register(obstacle);
     this.collisions.register(obstacle);
   }
+
   loadMenuUI() {
-    const checkbox = new Checkbox(500, 200, 50, 50, 4);
+    this.menuUI = new UILayer();
 
-    const slider = new Slider(500, 300, 200, 30, 4);
-
-    this.ui.register(checkbox);
-    this.ui.register(slider);
-
-    this.events.on("playerHealthChanged", ({ current, max }) =>
-      playerHealthBar.setValue(current, max),
+    const title = new Label(gameSettings.width / 2, 200, {
+      text: "Menu!",
+      align: "center",
+      baseline: "middle",
+    });
+    const checkbox = new Checkbox(500, 300, 50, 50, 4);
+    const slider = new Slider(500, 400, 200, 30, 4);
+    const startGameBtn = new Button(
+      gameSettings.width / 2,
+      500,
+      100,
+      30,
+      4,
+      this.events,
+      "gameStarted",
+      {
+        btnBorderSize: "4px",
+        btnBorderColor: "black",
+      },
+      {
+        text: "Play Game",
+      },
     );
+
+    this.menuUI.register(title);
+    this.menuUI.register(checkbox);
+    this.menuUI.register(slider);
+    this.menuUI.register(startGameBtn);
+
+    this.events.on("gameStarted", (event) => {
+      gameState.handleEvent(event, this);
+    });
   }
   loadPauseUI() {
     this.pauseUI = new UILayer();
 
-    this.pauseText = new Label(
+    const pauseText = new Label(
       gameSettings.width / 2,
       gameSettings.height / 2,
       {
@@ -173,7 +198,26 @@ class Game {
       },
     );
 
-    this.pauseUI.register(this.pauseText);
+    const menuBtnWidth = 200;
+    const menuBtn = new Button(
+      gameSettings.width / 2 + menuBtnWidth / 2,
+      gameSettings.height / 2 + 100,
+      menuBtnWidth,
+      40,
+      4,
+      this.events,
+      "gameMenu",
+      {
+        btnBorderColor: "black",
+        btnBorderSize: "4px",
+      },
+      {
+        text: "Quit to Menu",
+      },
+    );
+
+    this.pauseUI.register(pauseText);
+    this.pauseUI.register(menuBtn);
   }
   loadPlayUI() {
     this.playUI = new UILayer();
@@ -186,15 +230,24 @@ class Game {
       3,
     );
 
-    this.tooltips.register(playerHealthBar, "This is a player's healthbar");
+    this.tooltips.register(
+      playerHealthBar,
+      "This is a player's healthbar",
+      gameState.states.play,
+    );
 
     this.playUI.register(playerHealthBar);
+
+    this.events.on("playerHealthChanged", ({ current, max }) =>
+      playerHealthBar.setValue(current, max),
+    );
   }
   init() {
-    this.spawn();
+    this.loadPlayState();
 
-    this.loadPauseUI();
     this.loadPlayUI();
+    this.loadPauseUI();
+    this.loadMenuUI();
   }
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -204,10 +257,8 @@ class Game {
 
     gameState.currentState.draw(this);
 
-    // UI
-    this.ui.draw(this.ctx);
     // debug
-    this.debugOverlay.draw(this.ctx);
+    this.debugOverlay.drawScreenStats(this.ctx);
     // Tooltip
     this.tooltips.draw(this.ctx);
     // this.debugGrid();
@@ -215,10 +266,8 @@ class Game {
   update(dt) {
     gameState.currentState.update(dt, this);
 
-    // UI
-    this.ui.update(dt, this.clientMouse);
     // Tooltip
-    this.tooltips.update(dt, this.clientMouse);
+    this.tooltips.update(dt, this.clientMouse, gameState.currentState);
     // Debug
     this.debugOverlay.update(dt, this.clientMouse);
     // Reset Mouse Click Pos
@@ -251,7 +300,6 @@ class Game {
     this.entities = new EntityRegistry();
     this.collisions = new CollisionSystem();
     this.events = new EventBus();
-    this.ui = new UILayer();
     this.start();
   }
 }

@@ -18,15 +18,15 @@ class StateManager {
 	setCurrentState(state) {
 		this.currentState = state;
 	}
-	handleEvent(event, events) {
+	handleEvent(event, game) {
 		if (this.currentState === undefined) {
 			throw new Error("currentState must be specified!");
 		}
 		for (const trans of this.currentState.transitions) {
 			if (trans.event === event) {
-				this.currentState.onExit(events);
+				this.currentState.onExit(game);
 				this.currentState = this.states[trans.state];
-				this.currentState.onEnter(events);
+				this.currentState.onEnter(game);
 				return "Transition Successful";
 			}
 		}

@@ -3,10 +3,9 @@ import { Label, isMouseOverlapping } from "../ui/ui.js";
 import { roundTo } from "../utilities/utils.js";
 
 class DebugOverlay {
-  constructor(ui, entities, collisions, inputs) {
+  constructor(entities, collisions, inputs) {
     this.inputs = inputs;
     this.isOn = false;
-    this.ui = ui;
     this.entities = entities;
     this.collisions = collisions;
 
@@ -37,13 +36,6 @@ class DebugOverlay {
   update(dt, mouse) {
     if (this.inputs.isDownOnce("debug_game")) {
       this.setState = !this.isOn;
-      if (this.isOn) {
-        this.ui.register(this.fpsLabel);
-        this.ui.register(this.countLabel);
-      } else {
-        this.ui.unregister(this.fpsLabel);
-        this.ui.unregister(this.countLabel);
-      }
     }
     if (!this.isOn) return;
 
@@ -78,7 +70,13 @@ class DebugOverlay {
     this.fps = roundTo(1 / this.frames, 2);
     this.fpsLabel.setText(`fps: ${this.fps}`);
   }
-  draw(ctx) {
+  drawScreenStats(ctx) {
+    if (!this.isOn) return;
+
+    this.fpsLabel.draw(ctx);
+    this.countLabel.draw(ctx);
+  }
+  drawHitboxes(ctx) {
     if (!this.isOn) return;
 
     ctx.save();

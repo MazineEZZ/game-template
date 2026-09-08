@@ -126,8 +126,8 @@ class Button extends UIElement {
       fontClr = "white",
       borderColor = "black",
       borderSize = 4,
-      align = "left",
-      baseline = "alphabetic",
+      align = "center",
+      baseline = "middle", // Alphabetic
       fontSize = "30px",
       fontName = "sans-serif",
       fontSrc = "",
@@ -158,14 +158,14 @@ class Button extends UIElement {
       fontSrc,
     });
   }
-  update(mouse) {
+  update(dt, mouse) {
     if (isMouseOverlapping(this, mouse.position)) {
       this.color = this.hoverClr;
     } else {
       this.color = this.unhoverClr;
     }
     if (isMouseOverlapping(this, mouse.lastClickPos)) {
-      this.events.emit(this.event);
+      this.events.emit(this.event, this.event);
     }
   }
   draw(ctx) {
@@ -523,12 +523,16 @@ class TooltipManager {
     this.tooltip = new Tooltip("black");
     this.trackedEntities = [];
   }
-  register(entity, text) {
-    this.trackedEntities.push({ entity, text });
+  register(entity, text, state) {
+    this.trackedEntities.push({ entity, text, state });
   }
-  update(dt, mouse) {
+  clear() {
+    this.trackedEntities = [];
+  }
+  update(dt, mouse, state) {
     for (const te of this.trackedEntities) {
-      if (isMouseOverlapping(te.entity, mouse.position)) {
+      console.log(state, te.state);
+      if (isMouseOverlapping(te.entity, mouse.position) && te.state === state) {
         const offset = 10;
         this.tooltip.position.x =
           te.entity.position.x + te.entity.width + offset;

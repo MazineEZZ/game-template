@@ -1,8 +1,10 @@
 class State {
-	constructor(transitions, { onEnter, onExit } = {}) {
+	constructor(transitions, { onEnter, onExit, update, draw } = {}) {
 		this.transitions = transitions;
 		this.onEnter = onEnter || (() => {});
 		this.onExit = onExit || (() => {});
+		this.update = update || (() => {});
+		this.draw = draw || (() => {});
 	}
 }
 
@@ -10,18 +12,21 @@ class StateManager {
 	constructor(states) {
 		this.states = states;
 	}
+	is(stateName) {
+		return this.currentState === this.states[stateName];
+	}
 	setCurrentState(state) {
 		this.currentState = state;
 	}
-	handleEvent(event) {
+	handleEvent(event, events) {
 		if (this.currentState === undefined) {
 			throw new Error("currentState must be specified!");
 		}
 		for (const trans of this.currentState.transitions) {
 			if (trans.event === event) {
-				this.currentState.onExit();
+				this.currentState.onExit(events);
 				this.currentState = this.states[trans.state];
-				this.currentState.onEnter();
+				this.currentState.onEnter(events);
 				return "Transition Successful";
 			}
 		}
@@ -29,36 +34,4 @@ class StateManager {
 	}
 }
 
-// GAME STATE
-const pausedState = new State([
-	{
-		event: "gameUnpaused",
-		state: "play",
-	},
-	{
-		event: "gameMenu",
-		state: "menu",
-	},
-]);
-const menuState = new State([
-	{
-		event: "gameStarted",
-		state: "play",
-	},
-]);
-const playState = new State([
-	{
-		event: "gamePaused",
-		state: "paused",
-	},
-]);
-
-const gameState = new StateManager({
-	paused: pausedState,
-	menu: menuState,
-	play: playState,
-});
-
-gameState.setCurrentState(gameState.states.menu);
-console.log(gameState.handleEvent("gameStarted"));
-console.log(gameState.handleEvent("gamePaused"));
+export { State, StateManager };

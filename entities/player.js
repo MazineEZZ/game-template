@@ -64,10 +64,10 @@ class Player extends Rect {
     this.position.x += normalized.x * this.speed * delta;
     this.position.y += normalized.y * this.speed * delta;
 
-    this.keepInBounds({
-      width: gameSettings.width,
-      height: gameSettings.height,
-    });
+    // this.keepInBounds({
+    //   width: gameSettings.width,
+    //   height: gameSettings.height,
+    // });
 
     // this.animation.update(delta);
 

@@ -1,4 +1,3 @@
-
 import { RegistrySystem } from "../systems/registry.js";
 import {
   calcDistance2Points,
@@ -6,6 +5,7 @@ import {
   colorToRGB,
   isLetter,
 } from "../utilities/utils.js";
+import { gameSettings } from "../data/settings.js";
 
 class UIElement {
   constructor(x, y, width, height, zIndex) {
@@ -368,9 +368,24 @@ class Slider extends UIElement {
   }
 }
 
-class Tooltip extends UIElement {
-  constructor(color, {fontSize = "20px", fontClr = "white", fontBorderClr = "black", fontBorderSize = 4, fontAlign = "left", fontBaseline = "top", } = {}) {
-    super(0, 0, 0, 0, 1);
+class TextBox extends UIElement {
+  constructor(
+    x,
+    y,
+    width,
+    height,
+    zIndex,
+    color,
+    {
+      fontSize = "20px",
+      fontClr = "white",
+      fontBorderClr = "black",
+      fontBorderSize = 4,
+      fontAlign = "left",
+      fontBaseline = "top",
+    } = {},
+  ) {
+    super(x, y, width, height, zIndex);
     this.color = color;
     this.padding = 10;
     this._dirty = false;
@@ -414,8 +429,24 @@ class Tooltip extends UIElement {
     lines.push(line.join(""));
     this.lines = lines;
 
-    this.width = Math.max(...this.lines.map(line => ctx.measureText(line).width)) + this.padding * 2;
+    this.width =
+      Math.max(...this.lines.map((line) => ctx.measureText(line).width)) +
+      this.padding * 2;
     this.height = this.lineHeight * this.lines.length + this.padding * 2;
+  }
+  keepInScreen() {
+    const offset = 10;
+    if (this.position.y + this.height >= gameSettings.height) {
+      this.position.y = gameSettings.height - this.height - offset;
+    } else if (this.position.y <= offset) {
+      this.position.y = offset;
+    }
+
+    if (this.position.x + this.width >= gameSettings.width) {
+      this.position.x = gameSettings.width - this.width - offset;
+    } else if (this.position.x <= offset) {
+      this.position.x = offset;
+    }
   }
   draw(ctx) {
     // Set width and height sizes for tooltip
@@ -425,28 +456,65 @@ class Tooltip extends UIElement {
       this.wrapLines(ctx);
       this._dirty = false;
     }
+
+    this.keepInScreen();
+
     // Back
     ctx.fillStyle = this.color;
     ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
 
-    // Label
+    // Text
     ctx.font = this.font;
     ctx.textAlign = this.align;
     ctx.textBaseline = this.baseline;
     let lineCount = 0;
-    // Border
     for (const line of this.lines) {
+      // Border
       ctx.strokeStyle = this.fontBorderClr;
       ctx.lineWidth = this.fontBorderSize;
       ctx.lineJoin = "round";
-      ctx.strokeText(line, this.position.x + this.padding, this.position.y + lineCount * this.lineHeight + this.padding);
+      ctx.strokeText(
+        line,
+        this.position.x + this.padding,
+        this.position.y + lineCount * this.lineHeight + this.padding,
+      );
       // Font
       ctx.fillStyle = this.fontClr;
-      ctx.fillText(line, this.position.x + this.padding, this.position.y + lineCount * this.lineHeight + this.padding);
+      ctx.fillText(
+        line,
+        this.position.x + this.padding,
+        this.position.y + lineCount * this.lineHeight + this.padding,
+      );
       lineCount++;
     }
 
     ctx.restore();
+  }
+}
+
+class Tooltip extends TextBox {
+  constructor(
+    color,
+    {
+      fontSize = "20px",
+      fontClr = "white",
+      fontBorderClr = "black",
+      fontBorderSize = 4,
+      fontAlign = "left",
+      fontBaseline = "top",
+    } = {},
+  ) {
+    super(0, 0, 0, 0, 1, color, {
+      fontSize,
+      fontClr,
+      fontBorderClr,
+      fontBorderSize,
+      fontAlign,
+      fontBaseline,
+    });
+    this.padding = 10;
+    this._dirty = false;
+    this.maxWidth = 200;
   }
 }
 
@@ -462,7 +530,8 @@ class TooltipManager {
     for (const te of this.trackedEntities) {
       if (isMouseOverlapping(te.entity, mouse.position)) {
         const offset = 10;
-        this.tooltip.position.x = te.entity.position.x + te.entity.width + offset;
+        this.tooltip.position.x =
+          te.entity.position.x + te.entity.width + offset;
         this.tooltip.position.y = te.entity.position.y;
         this.tooltip.setText(te.text);
         te.showTooltip = true;

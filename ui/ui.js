@@ -95,10 +95,9 @@ class Label extends UIElement {
 }
 
 class ImageUI extends UIElement {
-  constructor(src, x, y, width, height, zIndex) {
+  constructor(image, x, y, width, height, zIndex) {
     super(x, y, width, height, zIndex);
-    this.image = new Image();
-    this.image.src = src;
+    this.image = image;
   }
   draw(ctx) {
     ctx.drawImage(
@@ -159,6 +158,7 @@ class Button extends UIElement {
     });
   }
   update(dt, mouse) {
+    if (!this.visible) return;
     if (isMouseOverlapping(this, mouse.position)) {
       this.color = this.hoverClr;
     } else {
@@ -169,6 +169,7 @@ class Button extends UIElement {
     }
   }
   draw(ctx) {
+    if (!this.visible) return;
     // Border
     ctx.fillStyle = this.borderColor;
     ctx.fillRect(
@@ -278,8 +279,8 @@ class ResourceBar extends UIElement {
   draw(ctx) {
     ctx.save();
     // Back
-    ctx.fillStyle = "black";
-    ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
+    // ctx.fillStyle = "black";
+    // ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
     // Bar
     const offset = 3;
     ctx.fillStyle = `rgb(${this.progressColor.r}, ${this.progressColor.g}, ${this.progressColor.b})`;
@@ -492,80 +493,12 @@ class TextBox extends UIElement {
   }
 }
 
-class Tooltip extends TextBox {
-  constructor(
-    color,
-    {
-      fontSize = "20px",
-      fontClr = "white",
-      fontBorderClr = "black",
-      fontBorderSize = 4,
-      fontAlign = "left",
-      fontBaseline = "top",
-    } = {},
-  ) {
-    super(0, 0, 0, 0, 1, color, {
-      fontSize,
-      fontClr,
-      fontBorderClr,
-      fontBorderSize,
-      fontAlign,
-      fontBaseline,
-    });
-    this.padding = 10;
-    this._dirty = false;
-    this.maxWidth = 200;
-  }
-}
-
-class TooltipManager {
-  constructor() {
-    this.tooltip = new Tooltip("black");
-    this.trackedEntities = [];
-  }
-  register(entity, text, state) {
-    this.trackedEntities.push({ entity, text, state });
-  }
-  clear() {
-    this.trackedEntities = [];
-  }
-  update(dt, mouse, state) {
-    for (const te of this.trackedEntities) {
-      console.log(state, te.state);
-      if (isMouseOverlapping(te.entity, mouse.position) && te.state === state) {
-        const offset = 10;
-        this.tooltip.position.x =
-          te.entity.position.x + te.entity.width + offset;
-        this.tooltip.position.y = te.entity.position.y;
-        this.tooltip.setText(te.text);
-        te.showTooltip = true;
-      } else {
-        te.showTooltip = false;
-      }
-    }
-  }
-  draw(ctx) {
-    for (const te of this.trackedEntities) {
-      if (!te.showTooltip) continue;
-
-      this.tooltip.draw(ctx);
-    }
-  }
-}
-
 class UILayer extends RegistrySystem {
   constructor() {
     super();
   }
   sortByLayers() {
     this.elements.sort((a, b) => a.zIndex - b.zIndex);
-  }
-  update(dt, mouse) {
-    for (const el of [...this.elements]) {
-      if (typeof el.update === "function") {
-        el.update(dt, mouse);
-      }
-    }
   }
 }
 
@@ -608,8 +541,9 @@ function remap(t, t1, t2, a, b) {
 }
 
 export {
+  UIElement,
   UILayer,
-  TooltipManager,
+  TextBox,
   Label,
   Panel,
   ImageUI,
@@ -617,6 +551,5 @@ export {
   ResourceBar,
   Checkbox,
   Slider,
-  Tooltip,
   isMouseOverlapping,
 };

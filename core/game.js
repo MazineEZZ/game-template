@@ -12,9 +12,8 @@ import {
   Checkbox,
   Slider,
   Button,
-  TooltipManager,
-  Tooltip,
 } from "../ui/ui.js";
+import { TooltipManager, Tooltip } from "../ui/tooltip.js";
 import { Hazard } from "../entities/hazard.js";
 import { DebugOverlay } from "../systems/debug.js";
 import { Barrier } from "../entities/barrier.js";

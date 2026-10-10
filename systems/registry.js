@@ -10,10 +10,18 @@ class RegistrySystem {
     if (i !== -1) this.elements.splice(i, 1);
   }
   draw(ctx) {
-    for (const e of [...this.elements]) e.draw(ctx);
+    for (const e of [...this.elements]) {
+      if (typeof e.draw === "function") {
+        e.draw(ctx);
+      }
+    }
   }
-  update(dt) {
-    for (const e of [...this.elements]) e.update(dt);
+  update(dt, mouse) {
+    for (const e of [...this.elements]) {
+      if (typeof e.update === "function") {
+        e.update(dt, mouse);
+      }
+    }
   }
 }
 export { RegistrySystem };
